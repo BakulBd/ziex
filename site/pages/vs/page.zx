@@ -101,14 +101,66 @@ pub fn Page(ctx: zx.PageContext) zx.Component {
                                     <td>{formatSeconds(allocator, entry.build_time_s)}</td>
                                 </tr>
                             )}
+                            {for (related_projects) |project| (
+                                <tr>
+                                    <td class="vs-rank">-</td>
+                                    <td>
+                                        <a href={project.url} target="_blank" rel="noopener noreferrer">{project.name}</a>
+                                        <div>{project.project_type} · {project.language}</div>
+                                        <div>{project.description}</div>
+                                    </td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
-                <p class="vs-footnote">Benchmarks run in Docker containers with resource limits. Use this as directional data; workload characteristics can change relative rankings.</p>
+                <p class="vs-footnote">Benchmarks run in Docker containers with resource limits.</p>
             </section>
         </main>
     );
 }
+
+const FrameworkMeta = struct {
+    id: []const u8,
+    href: []const u8,
+    tagline: []const u8,
+};
+
+const RelatedProject = struct {
+    name: []const u8,
+    url: []const u8,
+    project_type: []const u8,
+    language: []const u8,
+    description: []const u8,
+};
+
+const related_projects = [_]RelatedProject{
+    .{ .name = "Jetzig", .url = "https://github.com/jetzig-framework/jetzig", .project_type = "Framework", .language = "Zig", .description = "Zig web framework with file routing and Zmpl templates." },
+    .{ .name = "Yew", .url = "https://github.com/yewstack/yew", .project_type = "Framework", .language = "Rust", .description = "Rust/WASM component framework for client-side web apps." },
+    .{ .name = "Sycamore", .url = "https://github.com/sycamore-rs/sycamore", .project_type = "Framework", .language = "Rust", .description = "Reactive Rust web framework with fine-grained reactivity." },
+    .{ .name = "Perseus", .url = "https://github.com/framesurge/perseus", .project_type = "Framework", .language = "Rust", .description = "Full-stack Rust framework focused on SSR/SSG workflows." },
+    .{ .name = "ZTS", .url = "https://github.com/zigster64/zts", .project_type = "Template Engine", .language = "Zig", .description = "Templating system for Zig applications and web views." },
+    .{ .name = "zmpl", .url = "https://github.com/jetzig-framework/zmpl", .project_type = "Template Engine", .language = "Zig", .description = "Compile-time Zig templating used by Jetzig." },
+    .{ .name = "mustache-zig", .url = "https://github.com/batiati/mustache-zig", .project_type = "Template Engine", .language = "Zig", .description = "Mustache template engine implementation in Zig." },
+    .{ .name = "etch", .url = "https://github.com/haze/etch", .project_type = "Template Engine", .language = "Zig", .description = "Template engine tuned for speed and simplicity." },
+    .{ .name = "Zap", .url = "https://github.com/zigzap/zap", .project_type = "Framework", .language = "Zig", .description = "High-performance Zig HTTP/server framework." },
+    .{ .name = "http.zig", .url = "https://github.com/karlseguin/http.zig", .project_type = "Library", .language = "Zig", .description = "Low-level HTTP server library used by Zig web frameworks." },
+    .{ .name = "tokamak", .url = "https://github.com/cztomsik/tokamak", .project_type = "Framework", .language = "Zig", .description = "Server-side Zig web framework." },
+    .{ .name = "zig-router", .url = "https://github.com/Cloudef/zig-router", .project_type = "Library", .language = "Zig", .description = "HTTP-like request routing library for Zig." },
+    .{ .name = "zig-webui", .url = "https://github.com/webui-dev/zig-webui/", .project_type = "Library", .language = "Zig", .description = "Use a web browser as a GUI from Zig apps." },
+    .{ .name = "Zine", .url = "https://github.com/kristoff-it/zine", .project_type = "Static Site Generator", .language = "Zig", .description = "Static site generator written in Zig." },
+    .{ .name = "Zinc", .url = "https://github.com/zon-dev/zinc/", .project_type = "Framework", .language = "Zig", .description = "Pure Zig web framework with performance focus." },
+    .{ .name = "zUI", .url = "https://github.com/thienpow/zui", .project_type = "UI Kit", .language = "Zig", .description = "Reusable UI components and styles for Jetzig." },
+    .{ .name = "zt", .url = "https://github.com/lalinsky/zt", .project_type = "Template Engine", .language = "Zig", .description = "Zig template library for rendering text/HTML." },
+    .{ .name = "zig-pek", .url = "https://github.com/nektro/zig-pek", .project_type = "Library", .language = "Zig", .description = "Comptime HTML/XML parser and renderer for Zig." },
+    .{ .name = "zigomponent", .url = "https://zigomp.prjct.dev/", .project_type = "Library", .language = "Zig", .description = "Component-style HTML generation in pure Zig." },
+};
 
 
 const bench_data = @import("../bench.zon");
@@ -158,12 +210,6 @@ const MetricSummary = struct {
     label: []const u8,
     value: []const u8,
     note: []const u8,
-};
-
-const FrameworkMeta = struct {
-    id: []const u8,
-    href: []const u8,
-    tagline: []const u8,
 };
 
 const framework_meta = [_]FrameworkMeta{

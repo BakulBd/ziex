@@ -171,31 +171,7 @@ const zx = @import("zx");
 
 ## Similar Projects
 
-### Rust
-
-* [Leptos](https://github.com/leptos-rs/leptos) - Full-stack, isomorphic Rust web framework with fine-grained reactivity and JSX-like syntax
-* [Dioxus](https://github.com/DioxusLabs/dioxus) - Cross-platform GUI framework with React-like API, supporting web, desktop, mobile, and SSR
-* [Yew](https://github.com/yewstack/yew) - Rust / Wasm framework for creating reliable and efficient web applications with component-based architecture
-* [Sycamore](https://github.com/sycamore-rs/sycamore) - Reactive web framework with fine-grained reactivity and minimal bundle sizes
-* [Perseus](https://github.com/framesurge/perseus) - Full-stack framework built on Sycamore with SSR, SSG, and incremental regeneration
-
-### Zig
-
-* [Jetzig](https://github.com/jetzig-framework/jetzig) - Zig web framework with MVC architecture, built-in ORM, and powerful templating
-* [ZTS](https://github.com/zigster64/zts) - Zig Templates made Simple, a templating system for Zig
-* [zmpl](https://github.com/jetzig-framework/zmpl) - Mode-based templating language that compiles to Zig functions at build time, used in Jetzig
-* [mustache-zig](https://github.com/batiati/mustache-zig) - Mustache template engine implementation in Zig
-* [etch](https://github.com/haze/etch) - Compile-time tuned templating engine focusing on speed and simplicity
-* [Zap](https://github.com/zigzap/zap) - High-performance backend framework in Zig
-* [http.zig](https://github.com/karlseguin/http.zig) - Low-level HTTP/1.1 server written entirely in Zig (_ZX_'s backend)
-* [tokamak](https://github.com/cztomsik/tokamak) - Server-side framework for Zig
-* [zig-router](https://github.com/Cloudef/zig-router) - Straightforward HTTP-like request routing library for Zig
-* [zig-webui](https://github.com/webui-dev/zig-webui/) - Zig library that allows using any web browser as a GUI
-* [Zine](https://github.com/kristoff-it/zine) - Fast, scalable, flexible static site generator (SSG) written in Zig
-* [Zinc](https://github.com/zon-dev/zinc/) - Web framework written in pure Zig with focus on high performance, usability, security, and extensibility
-* [zUI](https://github.com/thienpow/zui) - UI kit for Jetzig framework with reusable components and styles
-* [zig-pek](https://github.com/nektro/zig-pek) - Comptime HTML/XML parser and renderer in Zig
-* [zigomponent](https://zigomp.prjct.dev/) - HTML compoenents in pure zig
+- [Ziex VS →](https://ziex.dev/vs)
 
 ## Related Projects
 

@@ -103,7 +103,7 @@ pub fn Page(ctx: zx.PageContext) zx.Component {
     const framework = maybe_framework.?;
 
     return (
-        <main @allocator={allocator} class="vs-framework-wrap">
+        <main @allocator={allocator} class="vs-main">
             <style @escaping={.none}>
                 {@embedFile("../style.css")}
             </style>
