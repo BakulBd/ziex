@@ -9,18 +9,41 @@ pub fn GET(ctx: zx.RouteContext) !void {
 
     for (zx.routes) |route| {
         if (std.mem.indexOf(u8, route.path, ":") != null) continue;
-        _ = try w.write("  <url>\n");
-        _ = try w.write("    <loc>");
-        const full_path = try std.fmt.allocPrint(ctx.arena, "https://{s}{s}", .{ host, route.path });
-        _ = try w.write(full_path);
-        _ = try w.write("</loc>\n");
-        _ = try w.write("  </url>\n");
+        try writeSitemapUrl(w, ctx.arena, host, route.path);
+    }
+
+    for (custom_paths) |path| {
+        if (path.len == 0) continue;
+        if (path[0] != '/') continue;
+        if (hasStaticRoute(path)) continue;
+        try writeSitemapUrl(w, ctx.arena, host, path);
     }
 
     _ = try w.write("</urlset>\n");
 
     ctx.response.text(aw.written());
 }
+
+fn hasStaticRoute(path: []const u8) bool {
+    for (zx.routes) |route| {
+        if (std.mem.indexOf(u8, route.path, ":") != null) continue;
+        if (std.mem.eql(u8, route.path, path)) return true;
+    }
+    return false;
+}
+
+fn writeSitemapUrl(w: *std.Io.Writer, arena: std.mem.Allocator, host: []const u8, path: []const u8) !void {
+    _ = try w.write("  <url>\n");
+    _ = try w.write("    <loc>");
+    const full_path = try std.fmt.allocPrint(arena, "https://{s}{s}", .{ host, path });
+    _ = try w.write(full_path);
+    _ = try w.write("</loc>\n");
+    _ = try w.write("  </url>\n");
+}
+
+const custom_paths = [_][]const u8{
+    "/vs/jetzig",
+};
 
 const options: zx.RouteOptions = .{
     .static = .{},
