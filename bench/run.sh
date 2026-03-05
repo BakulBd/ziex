@@ -9,8 +9,18 @@ ALL_FRAMEWORKS=(ziex jetzig leptos dioxus solidjs nextjs)
 RESULTS_FILE="result.csv"
 BENCH_CONTAINER="ziex_bench-bench-1"
 
-if [ $# -gt 0 ]; then
-  FRAMEWORKS=("$@")
+MEASURE_BUILD_TIME=false
+ARGS=()
+for arg in "$@"; do
+  if [ "$arg" = "--build-time" ]; then
+    MEASURE_BUILD_TIME=true
+  else
+    ARGS+=("$arg")
+  fi
+done
+
+if [ ${#ARGS[@]} -gt 0 ]; then
+  FRAMEWORKS=("${ARGS[@]}")
 else
   FRAMEWORKS=("${ALL_FRAMEWORKS[@]}")
 fi
@@ -40,35 +50,103 @@ ms_now() {
   fi
 }
 
-echo "framework,idle_mb,peak_mb,build_time_s,image_mb,cold_start_ms,cpu_peak_pct,rps,p50_ms,p99_ms" > "$RESULTS_FILE"
+# Helper: read cgroup memory value (bytes → MB) from inside container
+# Uses cgroup v2 (memory.current / memory.peak) with v1 fallback
+cgroup_mem_current_mb() {
+  local cid="$1"
+  local bytes
+  bytes=$(docker exec "$cid" cat /sys/fs/cgroup/memory.current 2>/dev/null \
+    || docker exec "$cid" cat /sys/fs/cgroup/memory/memory.usage_in_bytes 2>/dev/null \
+    || echo 0)
+  awk "BEGIN {printf \"%.1f\", $bytes / 1048576}"
+}
+
+cgroup_mem_peak_mb() {
+  local cid="$1"
+  local bytes
+  bytes=$(docker exec "$cid" cat /sys/fs/cgroup/memory.peak 2>/dev/null \
+    || docker exec "$cid" cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes 2>/dev/null \
+    || echo 0)
+  awk "BEGIN {printf \"%.1f\", $bytes / 1048576}"
+}
+
+# Helper: reset cgroup peak memory counter before benchmark
+cgroup_mem_peak_reset() {
+  local cid="$1"
+  docker exec "$cid" sh -c 'echo 0 > /sys/fs/cgroup/memory.peak' 2>/dev/null \
+    || docker exec "$cid" sh -c 'echo 0 > /sys/fs/cgroup/memory/memory.max_usage_in_bytes' 2>/dev/null \
+    || true
+}
+
+# Helper: read cgroup CPU usage in microseconds (cgroup v2) or nanoseconds (v1→converted)
+cgroup_cpu_usage_us() {
+  local cid="$1"
+  local val
+  # cgroup v2: cpu.stat has "usage_usec <value>"
+  val=$(docker exec "$cid" sh -c 'grep "^usage_usec" /sys/fs/cgroup/cpu.stat 2>/dev/null | awk "{print \$2}"' 2>/dev/null || true)
+  if [ -n "$val" ] && [ "$val" != "0" ]; then
+    echo "$val"
+    return
+  fi
+  # cgroup v1 fallback: cpuacct.usage is in nanoseconds → convert to microseconds
+  val=$(docker exec "$cid" cat /sys/fs/cgroup/cpuacct/cpuacct.usage 2>/dev/null || echo 0)
+  awk "BEGIN {printf \"%.0f\", $val / 1000}"
+}
+
+# Helper: get binary size in MB for compiled frameworks
+get_binary_size_mb() {
+  local cid="$1"
+  local fw="$2"
+  local bin_path
+  case "$fw" in
+    ziex)    bin_path="/app/zx_bench_client" ;;
+    jetzig)  bin_path="/app/jetzig-demo" ;;
+    leptos)  bin_path="/app/leptos-ssr" ;;
+    dioxus)  bin_path="/app/bench_dioxus" ;;
+    *)       echo "0"; return ;;
+  esac
+  local bytes
+  bytes=$(docker exec "$cid" stat -c '%s' "$bin_path" 2>/dev/null \
+    || docker exec "$cid" stat -f '%z' "$bin_path" 2>/dev/null \
+    || echo 0)
+  awk "BEGIN {printf \"%.1f\", $bytes / 1048576}"
+}
+
+echo "framework,idle_mb,peak_mb,build_time_s,image_mb,binary_mb,cold_start_ms,cpu_avg_pct,cpu_peak_pct,rps,p50_ms,p99_ms" > "$RESULTS_FILE"
 
 
 # Build
-# Build each framework individually using BuildKit (--progress=plain) so we can
-# extract the actual build duration from its output. BuildKit emits lines like:
-#   #N DONE 45.2s
-# The maximum DONE timestamp across all steps = wall-clock build time.
-# Image size is captured immediately after build via docker image inspect.
 echo "Building containers..."
 BUILD_TIME_LIST=()
 IMAGE_MB_LIST=()
+docker compose build bench > /dev/null 2>&1
 for fw in "${FRAMEWORKS[@]}"; do
   echo -n "  Building $fw..."
-  if [ "$fw" = "ziex" ]; then
-    build_output=$(DOCKER_BUILDKIT=1 docker compose build "$fw" bench --progress=plain 2>&1)
-  else
-    build_output=$(DOCKER_BUILDKIT=1 docker compose build "$fw" --progress=plain 2>&1)
-  fi
+  if [ "$MEASURE_BUILD_TIME" = true ]; then
+    # Build each framework individually using BuildKit (--progress=plain) so we can
+    # extract the actual build duration from its output. BuildKit emits lines like:
+    #   #N DONE 45.2s
+    # The maximum DONE timestamp across all steps = wall-clock build time.
+    if [ "$fw" = "ziex" ]; then
+      build_output=$(DOCKER_BUILDKIT=1 docker compose --progress=plain build "$fw" bench)
+    else
+      build_output=$(DOCKER_BUILDKIT=1 docker compose --progress=plain build "$fw")
+    fi
 
-  # Max DONE timestamp from BuildKit plain output = total wall-clock build time
-  build_elapsed=$(echo "$build_output" | awk '
-    /^#[0-9]+ DONE / {
-      val = $3; sub(/s$/, "", val)
-      if (val + 0 > max) max = val + 0
-    }
-    END { printf "%.0f", max }
-  ')
-  build_elapsed=${build_elapsed:-0}
+    # Max DONE timestamp from BuildKit plain output = total wall-clock build time
+    build_elapsed=$(echo "$build_output" | awk '
+      /^#[0-9]+ DONE / {
+        val = $3; sub(/s$/, "", val)
+        if (val + 0 > max) max = val + 0
+      }
+      END { printf "%.0f", max }
+    ')
+    build_elapsed=${build_elapsed:-0}
+  else
+    # docker compose build "$fw" > /dev/null 2>&1
+    docker compose build bench > /dev/null 2>&1
+    build_elapsed=0
+  fi
   BUILD_TIME_LIST+=("$build_elapsed")
 
   # Image size: docker compose names images as <project>-<service> (project = ziex_bench)
@@ -90,7 +168,7 @@ echo -e "\033[2m─────────────────────�
 
 
 IDLE_MEM_LIST=()
-echo "▸ Measuring idle memory..."
+echo "▸ Measuring idle memory (cgroup)..."
 for fw in "${FRAMEWORKS[@]}"; do
   cid=$(docker compose ps -q "$fw")
   if [ -z "$cid" ]; then
@@ -98,50 +176,99 @@ for fw in "${FRAMEWORKS[@]}"; do
     IDLE_MEM_LIST+=("0")
     continue
   fi
-  idle_mem=$(docker stats --no-stream --format "{{.MemUsage}}" "$cid" | awk -F'/' '{print $1}' | grep -o '[0-9.]*' | head -1)
+  idle_mem=$(cgroup_mem_current_mb "$cid")
   IDLE_MEM_LIST+=("${idle_mem:-0}")
+  echo "  $fw: ${idle_mem} MB"
 done
 echo ""
 
 
-# Benchmark (req/s + peak memory + peak CPU)
-# CPU is sampled in a background loop during the oha run. docker stats --no-stream
-# takes ~1 s per call (one Docker metrics interval), so we get several samples
-# over a typical 10 k-request run. The peak is recorded.
+# Binary size (only meaningful for compiled frameworks)
+echo "▸ Measuring binary size..."
+BINARY_MB_LIST=()
+for fw in "${FRAMEWORKS[@]}"; do
+  cid=$(docker compose ps -q "$fw")
+  if [ -z "$cid" ]; then
+    BINARY_MB_LIST+=("0")
+    continue
+  fi
+  bin_mb=$(get_binary_size_mb "$cid" "$fw")
+  BINARY_MB_LIST+=("${bin_mb:-0}")
+  echo "  $fw: ${bin_mb} MB"
+done
+echo ""
+
+
+# Benchmark (req/s + peak memory + CPU via cgroup cpu.stat)
+# Average CPU = delta(usage_usec) / (wall_time_us * num_cpus) * 100
+# Peak CPU = max sampled delta(usage_usec) over short intervals during the benchmark
 echo "▸ Measuring req/s + CPU..."
 PEAK_MEM_LIST=()
+CPU_AVG_LIST=()
 CPU_PEAK_LIST=()
 BENCH_RESULTS_LIST=()
+
+# Number of CPUs allocated to containers (from compose resource limits)
+NUM_CPUS=2
 
 for fw in "${FRAMEWORKS[@]}"; do
   cid=$(docker compose ps -q "$fw")
 
-  # Start background CPU sampling loop
-  CPU_TMP=$(mktemp)
+  # Reset cgroup peak counter before benchmark so we get true peak during the run
+  cgroup_mem_peak_reset "$cid"
+
+  # Record CPU usage before benchmark (cgroup cpu.stat)
+  cpu_before=$(cgroup_cpu_usage_us "$cid")
+  wall_before=$(date +%s%N 2>/dev/null || echo $(($(date +%s) * 1000000000)))
+
+  # Start background CPU peak sampling loop via cgroup cpu.stat
+  CPU_PEAK_TMP=$(mktemp)
   (
+    prev_cpu=$(cgroup_cpu_usage_us "$cid")
+    prev_wall=$(date +%s%N 2>/dev/null || echo $(($(date +%s) * 1000000000)))
     while true; do
-      docker stats --no-stream --format "{{.CPUPerc}}" "$cid" 2>/dev/null \
-        | tr -d '%' >> "$CPU_TMP"
-      sleep 0.3
+      sleep 0.2
+      cur_cpu=$(cgroup_cpu_usage_us "$cid")
+      cur_wall=$(date +%s%N 2>/dev/null || echo $(($(date +%s) * 1000000000)))
+      awk "BEGIN {
+        delta_cpu = $cur_cpu - $prev_cpu;
+        wall_us = ($cur_wall - $prev_wall) / 1000;
+        if (wall_us > 0) printf \"%.1f\\n\", (delta_cpu / (wall_us * $NUM_CPUS)) * 100;
+      }" >> "$CPU_PEAK_TMP"
+      prev_cpu=$cur_cpu
+      prev_wall=$cur_wall
     done
   ) &
-  CPU_LOOP_PID=$!
+  CPU_PEAK_PID=$!
 
   # Run benchmark for this single framework
   docker exec -t "$BENCH_CONTAINER" /bench/oha.sh --container --quiet "$fw" 2>&1 | \
     awk 'NR>=4 && NR<=8 {print; fflush()}'
   echo ""
 
-  # Stop CPU sampling
-  kill "$CPU_LOOP_PID" 2>/dev/null; wait "$CPU_LOOP_PID" 2>/dev/null || true
-  peak_cpu=$(sort -rn "$CPU_TMP" 2>/dev/null | head -1 | grep -o '[0-9.]*' || echo 0)
+  # Record CPU usage after benchmark
+  cpu_after=$(cgroup_cpu_usage_us "$cid")
+  wall_after=$(date +%s%N 2>/dev/null || echo $(($(date +%s) * 1000000000)))
+
+  # Stop CPU peak sampling
+  kill "$CPU_PEAK_PID" 2>/dev/null; wait "$CPU_PEAK_PID" 2>/dev/null || true
+  peak_cpu=$(sort -rn "$CPU_PEAK_TMP" 2>/dev/null | head -1 | grep -o '[0-9.]*' || echo 0)
   peak_cpu=${peak_cpu:-0}
-  rm -f "$CPU_TMP"
+  rm -f "$CPU_PEAK_TMP"
   CPU_PEAK_LIST+=("$peak_cpu")
 
-  # Measure peak memory immediately after benchmark (memory still elevated)
+  # Compute average CPU% = delta_cpu_us / (wall_time_us * num_cpus) * 100
+  cpu_avg=$(awk "BEGIN {
+    delta_cpu = $cpu_after - $cpu_before;
+    wall_us = ($wall_after - $wall_before) / 1000;
+    if (wall_us > 0) printf \"%.1f\", (delta_cpu / (wall_us * $NUM_CPUS)) * 100;
+    else printf \"0\";
+  }")
+  CPU_AVG_LIST+=("${cpu_avg:-0}")
+
+  # Read true peak memory from cgroup (kernel-tracked, no sampling needed)
   if [ -n "$cid" ]; then
-    peak_mem=$(docker stats --no-stream --format "{{.MemUsage}}" "$cid" | awk -F'/' '{print $1}' | grep -o '[0-9.]*' | head -1)
+    peak_mem=$(cgroup_mem_peak_mb "$cid")
     PEAK_MEM_LIST+=("${peak_mem:-0}")
   else
     PEAK_MEM_LIST+=("0")
@@ -186,10 +313,12 @@ for i in "${!FRAMEWORKS[@]}"; do
   peak="${PEAK_MEM_LIST[$i]:-0}"
   build_time="${BUILD_TIME_LIST[$i]:-0}"
   img_mb="${IMAGE_MB_LIST[$i]:-0}"
+  bin_mb="${BINARY_MB_LIST[$i]:-0}"
   cold_ms="${COLD_START_LIST[$i]:-0}"
+  cpu_avg="${CPU_AVG_LIST[$i]:-0}"
   cpu_peak="${CPU_PEAK_LIST[$i]:-0}"
   IFS=',' read -r _ rps p50 p99 <<< "${BENCH_RESULTS_LIST[$i]}"
-  echo "$fw,$idle,$peak,$build_time,$img_mb,$cold_ms,$cpu_peak,$rps,$p50,$p99" >> "$RESULTS_FILE"
+  echo "$fw,$idle,$peak,$build_time,$img_mb,$bin_mb,$cold_ms,$cpu_avg,$cpu_peak,$rps,$p50,$p99" >> "$RESULTS_FILE"
 done
 
 # Stop all services
@@ -198,12 +327,12 @@ docker compose stop "${FRAMEWORKS[@]}" > /dev/null 2>&1
 # Pretty summary output from 
 echo -e "\033[2m───────────────────────────────────────────────────────────────────────\033[0m"
 echo ""
-printf '%-12s %9s %10s %10s %9s %9s %8s %8s %10s %10s\n' \
-  "Framework" "Req/s" "P50" "P99" "Idle" "Peak" "Image" "Cold" "CPU%" "Build"
-tail -n +2 "$RESULTS_FILE" | while IFS=',' read -r fw idle peak build_time img_mb cold_ms cpu_peak rps p50 p99; do
+printf '%-12s %9s %10s %10s %9s %9s %8s %8s %8s %8s %8s %10s\n' \
+  "Framework" "Req/s" "P50" "P99" "Idle" "Peak" "Image" "Binary" "Cold" "AvgCPU" "PkCPU" "Build"
+tail -n +2 "$RESULTS_FILE" | while IFS=',' read -r fw idle peak build_time img_mb bin_mb cold_ms cpu_avg cpu_peak rps p50 p99; do
   label=$(get_label "$fw")
-  printf '  %-12s %9.0f %8.2f ms %8.2f ms %6s MB %6s MB %6s MB %6sms %8s%% %8ss\n' \
-    "$label" "$rps" "$p50" "$p99" "$idle" "$peak" "$img_mb" "$cold_ms" "$cpu_peak" "$build_time"
+  printf '  %-12s %9.0f %8.2f ms %8.2f ms %6s MB %6s MB %6s MB %5s MB %6sms %6s%% %6s%% %8ss\n' \
+    "$label" "$rps" "$p50" "$p99" "$idle" "$peak" "$img_mb" "$bin_mb" "$cold_ms" "$cpu_avg" "$cpu_peak" "$build_time"
 done
 
 echo ""
@@ -214,7 +343,7 @@ ZON_FILE="../site/pages/bench.zon"
 {
   echo "// Auto-generated by bench/bench.sh — do not edit"
   echo ".{"
-  tail -n +2 "$RESULTS_FILE" | while IFS=',' read -r fw idle peak build_time img_mb cold_ms cpu_peak rps p50 p99; do
+  tail -n +2 "$RESULTS_FILE" | while IFS=',' read -r fw idle peak build_time img_mb bin_mb cold_ms cpu_avg cpu_peak rps p50 p99; do
     label=$(get_label "$fw")
     cat <<EOF
     .{
@@ -224,7 +353,9 @@ ZON_FILE="../site/pages/bench.zon"
         .peak_memory_mb = $peak,
         .build_time_s = $build_time,
         .image_mb = $img_mb,
+        .binary_mb = $bin_mb,
         .cold_start_ms = $cold_ms,
+        .cpu_avg_pct = $cpu_avg,
         .cpu_peak_pct = $cpu_peak,
         .requests_per_sec = ${rps%.*},
         .p50_latency_ms = $p50,

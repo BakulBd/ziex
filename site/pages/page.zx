@@ -90,8 +90,15 @@ fn formatCpuPeak(pct: f64) []const u8 {
     return std.fmt.comptimePrint("{d:.1}%", .{pct});
 }
 
+// Helper function to format binary size in MB
+fn formatBinarySize(mb: f64) []const u8 {
+    if (mb == 0) return "N/A";
+    return std.fmt.comptimePrint("{d:.1} MB", .{mb});
+}
+
 // Map framework id to its website URL
 fn getFrameworkUrl(comptime id: []const u8) []const u8 {
+    if (std.mem.eql(u8, id, "jetzig")) return "https://jetzig.dev";
     if (std.mem.eql(u8, id, "leptos")) return "https://leptos.dev";
     if (std.mem.eql(u8, id, "solidjs")) return "https://start.solidjs.com";
     if (std.mem.eql(u8, id, "dioxus")) return "https://dioxuslabs.com";
@@ -221,6 +228,7 @@ fn buildImageSizeRows() [bench_len]BenchmarkRow {
             .tooltip_metrics = &[_]TooltipMetric{
                 .{ .label = "Framework", .value = d.label },
                 .{ .label = "Image Size", .value = formatImageSize(d.image_mb) },
+                .{ .label = "Binary Size", .value = formatBinarySize(d.binary_mb) },
             },
         };
     }
@@ -241,11 +249,12 @@ fn buildCpuUsageRows() [bench_len]BenchmarkRow {
         const d = @field(bench_data, field.name);
         rows[i] = .{
             .label = d.label,
-            .value = -d.cpu_peak_pct, // negative so lower CPU = longer bar
-            .display = formatCpuPeak(d.cpu_peak_pct),
+            .value = -d.cpu_avg_pct, // negative so lower CPU = longer bar
+            .display = formatCpuPeak(d.cpu_avg_pct),
             .url = getFrameworkUrl(d.id),
             .tooltip_metrics = &[_]TooltipMetric{
                 .{ .label = "Framework", .value = d.label },
+                .{ .label = "Avg CPU", .value = formatCpuPeak(d.cpu_avg_pct) },
                 .{ .label = "Peak CPU", .value = formatCpuPeak(d.cpu_peak_pct) },
                 .{ .label = "Requests/sec", .value = formatRequests(d.requests_per_sec) },
             },
@@ -287,8 +296,8 @@ const benchmark_tabs = [_]BenchmarkTab{
     .{
         .id = "bench-tab-cpu",
         .label = "CPU",
-        .metric = "Peak CPU usage during load (lower is better)",
-        .footnote = "Maximum CPU utilization during the load test. Lower means more efficient resource usage.",
+        .metric = "Average CPU usage during load (lower is better)",
+        .footnote = "Average CPU utilization during the load test via cgroup cpu.stat. Hover for peak CPU.",
         .rows = benchmark_cpu_usage_rows[0..],
         .checked = false,
     },

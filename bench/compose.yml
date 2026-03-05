@@ -11,6 +11,7 @@ services:
       timeout: 2s
       retries: 15
       start_period: 5s
+    cpuset: "0,1"
     deploy:
       resources:
         limits:
@@ -29,6 +30,7 @@ services:
       timeout: 2s
       retries: 15
       start_period: 5s
+    cpuset: "0,1"
     deploy:
       resources:
         limits:
@@ -45,6 +47,7 @@ services:
       timeout: 2s
       retries: 15
       start_period: 5s
+    cpuset: "0,1"
     deploy:
       resources:
         limits:
@@ -61,6 +64,7 @@ services:
       timeout: 2s
       retries: 15
       start_period: 5s
+    cpuset: "0,1"
     deploy:
       resources:
         limits:
@@ -79,6 +83,7 @@ services:
       timeout: 2s
       retries: 15
       start_period: 5s
+    cpuset: "0,1"
     deploy:
       resources:
         limits:
@@ -95,6 +100,7 @@ services:
       timeout: 2s
       retries: 15
       start_period: 5s
+    cpuset: "0,1"
     deploy:
       resources:
         limits:
@@ -108,6 +114,7 @@ services:
       context: .
       dockerfile: Dockerfile.bench
     # depends_on removed to allow selective startup
+    cpuset: "2,3"
     networks:
       - bench-net
 

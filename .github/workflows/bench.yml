@@ -30,7 +30,7 @@ jobs:
           if [ -n "${{ github.event.inputs.frameworks }}" ]; then
             echo "list=${{ github.event.inputs.frameworks }}" >> $GITHUB_OUTPUT
           else
-            echo "list=nextjs solidjs leptos dioxus ziex" >> $GITHUB_OUTPUT
+            echo "list=nextjs solidjs leptos dioxus jetzig ziex" >> $GITHUB_OUTPUT
           fi
 
       - name: Build nextjs
@@ -84,6 +84,16 @@ jobs:
           cache-from: type=gha,scope=ziex
           cache-to: type=gha,mode=max,scope=ziex
 
+      - name: Build jetzig
+        if: contains(steps.frameworks.outputs.list, 'jetzig')
+        uses: docker/build-push-action@v6
+        with:
+          context: bench/jetzig
+          load: true
+          tags: ziex_bench-jetzig:latest
+          cache-from: type=gha,scope=jetzig
+          cache-to: type=gha,mode=max,scope=jetzig
+
       - name: Build bench
         uses: docker/build-push-action@v6
         with:
@@ -127,18 +137,19 @@ jobs:
           {
             echo "## Benchmark Results"
             echo ""
-            echo "| Framework | Req/s | P50 (ms) | P99 (ms) | Idle (MB) | Peak (MB) | Image (MB) | Cold Start (ms) | CPU Peak (%) | Build (s) |"
-            echo "|-----------|------:|---------:|---------:|----------:|----------:|-----------:|----------------:|-------------:|----------:|"
-            tail -n +2 bench/result.csv | while IFS=',' read -r fw idle peak build_time img_mb cold_ms cpu_peak rps p50 p99; do
+            echo "| Framework | Req/s | P50 (ms) | P99 (ms) | Idle (MB) | Peak (MB) | Image (MB) | Binary (MB) | Cold Start (ms) | Avg CPU (%) | Peak CPU (%) | Build (s) |"
+            echo "|-----------|------:|---------:|---------:|----------:|----------:|-----------:|------------:|----------------:|------------:|-------------:|----------:|"
+            tail -n +2 bench/result.csv | while IFS=',' read -r fw idle peak build_time img_mb bin_mb cold_ms cpu_avg cpu_peak rps p50 p99; do
               case "$fw" in
                 ziex) label="Ziex" ;;
+                jetzig) label="Jetzig" ;;
                 leptos) label="Leptos" ;;
                 dioxus) label="Dioxus" ;;
                 solidjs) label="SolidStart" ;;
                 nextjs) label="Next.js" ;;
                 *) label="$fw" ;;
               esac
-              printf "| %s | %.0f | %.2f | %.2f | %.1f | %.1f | %.0f | %.0f | %.1f | %.0f |\n" \
-                "$label" "$rps" "$p50" "$p99" "$idle" "$peak" "$img_mb" "$cold_ms" "$cpu_peak" "$build_time"
+              printf "| %s | %.0f | %.2f | %.2f | %.1f | %.1f | %.0f | %s | %.0f | %.1f | %.1f | %.0f |\n" \
+                "$label" "$rps" "$p50" "$p99" "$idle" "$peak" "$img_mb" "$bin_mb" "$cold_ms" "$cpu_avg" "$cpu_peak" "$build_time"
             done
           } >> $GITHUB_STEP_SUMMARY
