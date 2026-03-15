@@ -1,0 +1,11 @@
+pub fn NotFound(ctx: zx.NotFoundContext) zx.Component {
+    return (
+        <html @allocator={ctx.arena} lang="en">
+            <body>
+                <h1>Not Found</h1>
+            </body>
+        </html>
+    );
+}
+
+const zx = @import("zx");

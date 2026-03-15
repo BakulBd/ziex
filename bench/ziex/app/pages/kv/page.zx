@@ -1,0 +1,14 @@
+pub fn Page(ctx: zx.PageContext) !zx.Component {
+    const prev = try zx.kv.get(ctx.arena, "count");
+    const count = if (prev) |s| (try std.fmt.parseInt(u64, s, 10)) + 1 else 1;
+    try zx.kv.put("count", try ctx.fmt("{d}", .{count}), .{});
+
+    return (
+        <main @allocator={ctx.arena} lang="en">
+            <p>Visit count: {count}</p>
+        </main>
+    );
+}
+
+const zx = @import("zx");
+const std = @import("std");
