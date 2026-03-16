@@ -355,7 +355,7 @@ pub fn Page(ctx: zx.PageContext) zx.Component {
         break :blk 1970 + years_since_epoch;
     };
 
-    const overview_code = @embedFile("./examples/overview.zx");
+    // const overview_code = @embedFile("./examples/overview.zx");
     const feature_examples = normalizeFeatureExamples(
         allocator,
         @embedFile("./examples/feature_examples.zx"),
@@ -457,6 +457,9 @@ pub fn Page(ctx: zx.PageContext) zx.Component {
                 <section class="features">
                     <div class="features-header">
                         <h2 class="section-title">Features</h2>
+                        <p class="section-subtitle">
+                            Everything you need to build fast, safe, and deployable web applications.
+                        </p>
                     </div>
                     <div class="features-grid">
                         {for (features) |f| (<FeatureCard icon_fn={f.icon_fn} title={f.title} description={f.description} />)}
@@ -469,7 +472,7 @@ pub fn Page(ctx: zx.PageContext) zx.Component {
                 // <TechnicalSection allocator={allocator} />
                 <section class="feature-examples">
                     <div class="feature-examples-header">
-                        <h2 class="section-title">Feature Examples</h2>
+                        <h2 class="section-title">Code Examples</h2>
                         <p class="section-subtitle">
                             Short, focused snippets that show how each feature feels in practice.
                         </p>
@@ -485,20 +488,20 @@ pub fn Page(ctx: zx.PageContext) zx.Component {
                         <FeatureExample title="Client-side Rendering" wide={true} child={(<CodePreviewExample title="counter.zx" section="Client-side Rendering" source={feature_examples} code="" preview={(<Examples.Client />)} />)} />
                     </div>
                 </section>
-                <section class="code-section">
-                    <div class="code-container">
-                        <div class="code-header">
-                            <h2 class="section-title">Familiar Syntax</h2>
-                            <p class="section-subtitle">
-                                Familiar JSX like syntax or just like HTML with having access to Zig's control flow.
-                            </p>
-                        </div>
-                        <CodeWindow allocator={allocator} title="example.zx" section="" source="" code={overview_code} />
-                    </div>
-                </section>
+                // <section class="code-section">
+                //     <div class="code-container">
+                //         <div class="code-header">
+                //             <h2 class="section-title">Familiar Syntax</h2>
+                //             <p class="section-subtitle">
+                //                 Familiar JSX like syntax or just like HTML with having access to Zig's control flow.
+                //             </p>
+                //         </div>
+                //         <CodeWindow allocator={allocator} title="example.zx" section="" source="" code={overview_code} />
+                //     </div>
+                // </section>
             </main>
             <footer class="footer">
-                <p>© {current_year} {" Ziex contributors. Ziex is free and open source software released under the MIT license."}</p>
+                <p>Copyright © {current_year} {" ziex.dev"}</p>
             </footer>
             <script src=`/assets/clipboard.js?v={zx.info.version}` defer="true"></script>
         </div>

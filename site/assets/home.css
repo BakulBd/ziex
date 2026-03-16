@@ -14,7 +14,7 @@
     --zx-bg: #000000;
     --zx-bg-light: #0a0a0a;
     --zx-card-bg: #111111;
-    --zx-border: #262626;
+    --zx-border: #2626268c;
     --zx-code-bg: #0b0f14;
     --zx-text-muted: #a1a1a1;
 }
@@ -191,6 +191,7 @@ body {
     align-items: center;
     position: relative;
     animation: mascot-float 6s ease-in-out infinite;
+ 
 }
 
 .hero-mascot img {
@@ -223,7 +224,7 @@ body {
 
 @keyframes mascot-float {
     0%, 100% { transform: translateY(0) rotate(0); }
-    50% { transform: translateY(-20px) rotate(2deg); }
+    50% { transform: translateY(-8px) rotate(1deg); }
 }
 
 @keyframes mascot-glow-pulse {
@@ -249,7 +250,7 @@ body {
 
 @media (max-width: 768px) {
     .hero-content {
-        text-align: center;
+        text-align: left;
         padding-left: 0;
     }
 }
@@ -319,7 +320,7 @@ body {
 
 @media (max-width: 768px) {
     .hero-title-wrapper {
-        justify-content: center;
+        justify-content: flex-start;
     }
 }
 
@@ -343,8 +344,8 @@ body {
 
 @media (max-width: 768px) {
     .hero-description {
-        margin-left: auto;
-        margin-right: auto;
+        margin-left: 0;
+        margin-right: 0;
     }
 }
 
@@ -361,7 +362,7 @@ body {
 
 @media (max-width: 768px) {
     .hero-stats {
-        justify-content: center;
+        justify-content: flex-start;
         gap: 2rem;
     }
 }
@@ -551,7 +552,7 @@ body {
 
 @media (max-width: 768px) {
     .hero-cta {
-        justify-content: center;
+        justify-content: flex-start;
     }
 
     .hero-install .install-code {
@@ -671,7 +672,7 @@ body {
     left: 0;
     right: 0;
     z-index: 1000;
-    padding: 0.75rem 1.5rem;
+    padding: 0.2rem 1.5rem;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--zx-border);
@@ -738,9 +739,9 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.35rem 0.65rem;
+    padding: 0.125rem 0.5rem;
     border-radius: 999px;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
     transition: color 0.2s ease;
 }
@@ -751,8 +752,8 @@ body {
 }
 
 .nav-social-link svg {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
 }
 
 .nav-social-divider {
@@ -947,12 +948,6 @@ body {
     line-height: 1.1;
 }
 
-@media (max-width: 768px) {
-    .section-title {
-        text-align: center;
-    }
-}
-
 .section-subtitle {
     text-align: left;
     font-size: 1.125rem;
@@ -960,14 +955,6 @@ body {
     margin-bottom: 0;
     max-width: 600px;
     line-height: 1.7;
-}
-
-@media (max-width: 768px) {
-    .section-subtitle {
-        text-align: center;
-        margin-left: auto;
-        margin-right: auto;
-    }
 }
 
 .features-grid {
@@ -2046,12 +2033,12 @@ body {
     }
 }
 .footer {
-    padding: 1rem;
+    padding: 0.6rem;
     text-align: center;
     border-top: 1px solid var(--zx-border);
     margin-top: 0;
     color: var(--zx-text-muted);
-    font-size: 0.875rem;
+    font-size: 0.6rem;
 }
 
 .footer-links {
@@ -2074,9 +2061,8 @@ body {
 
 /* Benchmarks */
 .benchmarks {
-    padding: 5rem 2rem 6rem;
-    background: radial-gradient(circle at 80% 20%, rgba(0, 217, 255, 0.08), transparent 55%),
-        radial-gradient(circle at 10% 80%, rgba(255, 107, 53, 0.08), transparent 60%);
+    padding: 6rem 2rem;
+    background: transparent;
     border-top: 1px solid var(--zx-border);
     border-bottom: 1px solid var(--zx-border);
 }
@@ -2119,18 +2105,46 @@ body {
 .benchmarks-card {
     max-width: 980px;
     margin: 0 auto;
-    background: linear-gradient(180deg, rgba(12, 16, 22, 0.98) 0%, rgba(9, 12, 18, 0.98) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
-    padding: 1.5rem 1.75rem 2rem;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    background: transparent;
+    border: 1px solid var(--zx-border);
+    border-radius: 0;
+    padding: 2rem;
+    box-shadow: none;
+    position: relative;
+}
+
+.benchmarks-card::before {
+    content: '';
+    position: absolute;
+    top: -1.5px;
+    left: -1.5px;
+    width: 3px;
+    height: 3px;
+    background: #fff;
+    border-radius: 50%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.benchmarks-card::after {
+    content: '';
+    position: absolute;
+    bottom: -1.5px;
+    right: -1.5px;
+    width: 3px;
+    height: 3px;
+    background: #fff;
+    border-radius: 50%;
+    z-index: 2;
 }
 
 .benchmarks-tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    gap: 0.4rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--zx-border);
+    padding-bottom: 1rem;
 }
 
 .benchmarks-tab-radio {
@@ -2140,20 +2154,22 @@ body {
 }
 
 .benchmarks-tab-label {
-    padding: 0.5rem 0.95rem;
-    font-size: 0.85rem;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid transparent;
+    border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
-    background: rgba(255, 255, 255, 0.02);
+    background: transparent;
+    letter-spacing: 0.01em;
 }
 
 .benchmarks-tab-label:hover {
-    color: #e6edf3;
-    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--zx-border);
 }
 
 .benchmarks-panel {
@@ -2201,26 +2217,27 @@ body {
 
 .bench-bar {
     position: relative;
-    height: 16px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 999px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .bench-bar-fill {
     display: block;
     height: 100%;
     width: calc(var(--value) * 100%);
-    background: linear-gradient(90deg, #166534, #4ade80);
+    background: linear-gradient(90deg, rgba(74, 222, 128, 0.3), #4ade80);
     border-radius: inherit;
-    box-shadow: 0 0 18px rgba(74, 222, 128, 0.25);
+    box-shadow: none;
     transition: width 0.6s ease;
 }
 
 .bench-row:first-child .bench-bar-fill {
-    background: linear-gradient(90deg, #15803d, #4ade80, #86efac);
-    box-shadow: 0 0 22px rgba(74, 222, 128, 0.4);
+    background: linear-gradient(90deg, rgba(74, 222, 128, 0.5), #4ade80, #86efac);
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.3);
 }
 
 .bench-value {
@@ -2315,77 +2332,156 @@ body {
 
 @media (max-width: 768px) {
     .hero-inner {
-        flex-direction: column;
-        text-align: center;
-        gap: 2rem;
-        padding-top: 4rem;
+        display: grid;
+        grid-template-areas: 
+            "badge mascot"
+            "title mascot"
+            "subtitle mascot"
+            "description mascot"
+            "install install"
+            "cta cta";
+        grid-template-columns: 1fr 280px;
+        gap: 0;
+        padding-top: 5rem;
+        position: relative;
+    }
+
+    .hero-inner::before,
+    .hero-inner::after {
+        display: none;
     }
 
     .hero-content {
-        padding-left: 0;
-        order: 2;
+        display: contents;
     }
 
-    .hero-mascot {
-        order: 1;
-        width: 100%;
+    .hero-badge {
+        grid-area: badge;
+        margin-bottom: 1.5rem;
+        align-self: start;
+        justify-self: start;
+        width: fit-content;
     }
 
-    .hero-mascot img {
-        max-width: 280px;
-    }
-
-    .hero-mascot-glow {
-        width: 200px;
-        height: 200px;
+    .hero-title-wrapper {
+        grid-area: title;
+        margin-bottom: 1rem;
+        justify-content: flex-start;
     }
 
     .hero-title-main {
-        font-size: 3.5rem;
+        font-size: 4rem;
+    }
+
+    .hero-subtitle {
+        grid-area: subtitle;
+        margin-bottom: 1rem;
+        font-size: 1.75rem;
+    }
+
+    .hero-description {
+        grid-area: description;
+        margin-bottom: 2rem;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        font-size: 1rem;
+    }
+
+    .hero-install {
+        grid-area: install;
+        width: 100%;
+        max-width: 100%;
+        margin: 1rem 0 2.5rem;
+    }
+
+    .hero-cta {
+        grid-area: cta;
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .hero-mascot {
+        grid-area: mascot;
+        position: relative;
+        top: 0;
+        right: 0;
+        width: 280px;
+        z-index: 10;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .hero-mascot img {
+        max-width: 100%;
+    }
+
+    .hero-mascot-glow {
+        width: 220px;
+        height: 220px;
     }
 
     .hero-stats {
         gap: 2rem;
     }
+}
 
-    .hero-cta {
+@media (max-width: 640px) {
+    .hero-title-main {
+        font-size: 3.5rem;
+    }
+}
+
+@media (max-width: 580px) {
+    .hero-inner {
+        display: flex;
         flex-direction: column;
-        align-items: stretch;
+        padding-top: 6rem;
     }
 
-    .hero-install {
-        margin: 2rem auto 2.5rem;
-        max-width: 100%;
+    .hero-content {
+        display: block;
+        order: 1;
     }
 
-    .hero-install .install-box {
-        margin-left: auto;
-        margin-right: auto;
+    .hero-mascot {
+        position: absolute;
+        top: 10px;
+        right: -10px;
+        width: 270px;
+        opacity: 0.9;
+        pointer-events: none;
+        z-index: 1;
     }
 
-    .hero-install .install-box-header {
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        gap: 0.5rem;
+    .hero-title-main {
+        font-size: 3.2rem;
     }
 
-    .hero-install .install-tab-labels {
-        justify-content: flex-start;
-        flex: 1 1 auto;
+    .hero-badge {
+        margin-bottom: 2.5rem;
     }
 
-    .hero-install .copy-button {
-        margin-left: auto;
+    .hero-description {
+        margin-bottom: 2.5rem;
     }
+}
+
+@media (max-width: 768px) {
+    /* Generic responsive refinements */
 
     .btn {
-        width: 100%;
+        flex: 1;
         text-align: center;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
     }
-
+/* 
     .nav {
         padding: 1rem;
-    }
+    } */
 
     .features-grid,
     .feature-examples-grid,
