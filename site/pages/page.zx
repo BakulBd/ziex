@@ -420,30 +420,38 @@ pub fn Page(ctx: zx.PageContext) zx.Component {
             </nav>
             <main>
                 <section class="hero">
-                    <div class="hero-content">
-                        <div class="hero-badge">v{zx.info.version}</div>
-                        <div class="hero-title-wrapper">
-                            <h1 class="hero-title-main">Ziex</h1>
-                            <div class="hero-title-accent">/</div>
-                        </div>
-                        <p class="hero-subtitle">
-                            The full-stack web framework for Zig.
-                        </p>
-                        <p class="hero-description">
-                            Compile-time safety, deterministic performance, and zero-dependency deployment. Build once, run everywhere.
-                        </p>
-                        <div class="hero-install">
-                            <InstallCLI allocator={allocator} />
-                        </div>
-                        <div class="hero-cta">
-                            <a href="/learn" class="btn btn-primary">Get Started</a>
-                            <a href="/playground" class="btn btn-secondary">Playground</a>
-                        </div>
+                    <div class="hero-visuals">
+                        <div class="hero-visuals-grid"></div>
+                        <div class="hero-visuals-dots"></div>
+                        <div class="hero-visuals-scanline"></div>
                     </div>
-                    <div class="hero-decoration">
-                        <div class="hero-decoration-line"></div>
-                        <div class="hero-decoration-line"></div>
-                        <div class="hero-decoration-line"></div>
+                    <div class="hero-inner">
+                        <div class="hero-content">
+                            <div class="hero-badge">v{zx.info.version}</div>
+                            <div class="hero-title-wrapper">
+                                <h1 class="hero-title-main">Ziex</h1>
+                                <div class="hero-title-accent">/</div>
+                            </div>
+                            <p class="hero-subtitle">
+                                The full-stack web framework for Zig.
+                            </p>
+                            <p class="hero-description">
+                                Compile-time safety, deterministic performance, and zero-dependency deployment. Build once, run everywhere.
+                            </p>
+                            <div class="hero-install">
+                                <InstallCLI allocator={allocator} />
+                            </div>
+                            <div class="hero-cta">
+                                <a href="/learn" class="btn btn-primary">Get Started</a>
+                                <a href="/playground" class="btn btn-secondary">Playground</a>
+                            </div>
+                        </div>
+
+                        <div class="hero-mascot">
+                            <div class="hero-mascot-glow"></div>
+                            // <div class="hero-mascot-glow hero-mascot-glow--inner"></div>
+                            <img src="https://raw.githubusercontent.com/ziex-dev/branding/main/scalled/ziex-ziguana.png" alt="Ziguana Mascot" />
+                        </div>
                     </div>
                 </section>
                 <section class="features">
