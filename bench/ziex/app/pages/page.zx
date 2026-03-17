@@ -1,4 +1,8 @@
 pub fn Page(ctx: zx.PageContext) zx.Component {
+
+    if (root.config.csr) {
+        return csr_page.Page(ctx);
+    }
     return (
         <main @allocator={ctx.arena}>
             <ol>
@@ -12,3 +16,5 @@ pub fn Page(ctx: zx.PageContext) zx.Component {
 }
 
 const zx = @import("zx");
+const root = @import("root");
+const csr_page = @import("js-framework-benchmark/csr/page.zx");

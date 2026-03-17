@@ -4,6 +4,9 @@ pub fn Layout(ctx: zx.LayoutContext, children: zx.Component) zx.Component {
             <head>
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
+                {if (root.config.csr) (
+                    <link href="/css/currentStyle.css" rel="stylesheet" />
+                )}
             </head>
             <body>
                 {children}
@@ -12,4 +15,5 @@ pub fn Layout(ctx: zx.LayoutContext, children: zx.Component) zx.Component {
     );
 }
 
+const root = @import("root");
 const zx = @import("zx");

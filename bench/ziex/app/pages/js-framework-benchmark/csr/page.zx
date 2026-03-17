@@ -1,14 +1,13 @@
 pub fn Page(ctx: zx.PageContext) zx.Component {
     return (
         <div id="main" @allocator={ctx.arena}>
-            <SimpleApp @rendering={.client} @allocator={ctx.arena} />
+            <JsFrameworkBench @rendering={.client} />
         </div>
     );
 }
 
-const Item = struct { id: u32, label: []const u8 };
 
-pub fn SimpleApp(allocator: zx.Allocator) zx.Component {
+pub fn JsFrameworkBench(allocator: zx.Allocator) zx.Component {
     return (
         <div @{allocator} class="container">
             <div class="jumbotron">
@@ -41,12 +40,12 @@ pub fn SimpleApp(allocator: zx.Allocator) zx.Component {
     );
 }
 
+const Item = struct { id: u32, label: []const u8 };
 const RowProps = struct { item: Item };
 
 fn Row(ctx: *zx.ComponentCtx(RowProps)) zx.Component {
     const Handler = struct {
         fn onSelect(h_ctx: *anyopaque, _: zx.EventContext) void {
-            std.log.info("onSelect called with", .{});
             selected = @intCast(@intFromPtr(h_ctx));
             zx.rerender();
         }
@@ -92,6 +91,7 @@ fn Button(ctx: *zx.ComponentCtx(ButtonProps)) zx.Component {
         </div>
     );
 }
+
 var next_id: u32 = 1;
 var selected: u32 = 0;
 var items = std.ArrayList(Item).empty;
@@ -158,14 +158,17 @@ const colours = [_][]const u8{ "red", "yellow", "blue", "green", "pink", "brown"
 const nouns = [_][]const u8{ "table", "chair", "house", "bbq", "desk", "car", "pony", "cookie", "sandwich", "burger", "pizza", "mouse", "keyboard" };
 
 fn BuildRows(count_to_add: u32, clear_first: bool) void {
-    std.log.info("BuildRows called with count_to_add: {d}", .{count_to_add});
     if (clear_first) {
         items.clearRetainingCapacity();
         selected = 0;
     }
 
     for (0..count_to_add) |_| {
-        const label = std.fmt.allocPrint(zx.client_allocator, "{s} {s} {s}", .{ adjectives[RandomNumber(adjectives.len)], colours[RandomNumber(colours.len)], nouns[RandomNumber(nouns.len)] }) catch @panic("OOM");
+        const label = std.fmt.allocPrint(zx.client_allocator, "{s} {s} {s}", .{
+            adjectives[RandomNumber(adjectives.len)],
+            colours[RandomNumber(colours.len)],
+            nouns[RandomNumber(nouns.len)],
+        }) catch @panic("OOM");
         const item = Item{
             .id = next_id,
             .label = label,
@@ -175,10 +178,7 @@ fn BuildRows(count_to_add: u32, clear_first: bool) void {
         next_id += 1;
     }
 
-    std.log.info("Total items after BuildRows: {d}", .{items.items.len});
     zx.rerender();
-    std.log.info("after: {d}", .{items.items.len});
-    // count.set(@intCast(items.items.len));
 }
 
 fn create_rows(_: zx.EventContext) void {

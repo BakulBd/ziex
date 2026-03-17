@@ -6,6 +6,9 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    // --- Options --- //
+    const is_csr_bench = true;
+
     // --- Ziex Setup (sets up ZX, dependencies, executables and `serve` step) ---
     const site_exe = b.addExecutable(.{
         .name = "zx_bench_client",
@@ -18,7 +21,7 @@ pub fn build(b: *std.Build) !void {
     });
 
     var zx_builder = try zx.init(b, site_exe, .{ .client = .{
-        .jsglue_href = "/assets/main.js",
+        .jsglue_href = if (is_csr_bench) "assets/main.js" else null,
     } });
 
     zx_builder.addPlugin(zx.plugins.esbuild(b, .{
