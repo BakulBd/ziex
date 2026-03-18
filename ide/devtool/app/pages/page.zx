@@ -3,7 +3,7 @@ var components: []const data.Component = &.{};
 var inputvalue: []const u8 = "";
 var stateFilter: []const u8 = "";
 
-var selected_component = zx.signal([]const u8, "0");
+var selected_component: []const u8 = "0";
 
 var fetched = false;
 // Helper function to find a component by ID recursively
@@ -63,7 +63,7 @@ pub fn ComponentTree(
     ctx: *zx.ComponentCtx(ComponentTreeProps),
 ) zx.Component {
     data.loadSettings();
-    const sel = selected_component.get();
+    const sel = selected_component;
     const display_components = filterNativeElements(ctx.allocator, components);
     return (
         <div @allocator={ctx.allocator} class="component-tree">
@@ -77,7 +77,7 @@ pub fn ComponentTree(
 pub fn ComponentState(
     ctx: *zx.ComponentCtx(ComponentStateProps),
 ) zx.Component {
-    const sel = selected_component.get();
+    const sel = selected_component;
     const maybe_component = findComponentById(components, sel);
     
     if (maybe_component) |comp| {
@@ -128,7 +128,7 @@ pub fn ComponentStateFilter(
 
 pub fn handleComponentClick(ctx: zx.EventContext) void {
     const id = ctx.value() orelse "0";
-    selected_component.set(id);
+    selected_component = id;
     zx.rerender();
 }
 
@@ -201,7 +201,7 @@ fn hasNativeChild(children: []const Component) bool {
 const ComponentItemProps = struct { id: []const u8, name: []const u8, has_children: bool, children: []const Component, depth: usize = 0, selected: bool = false, badge: []const u8 = "", is_native: bool = false };
 
 fn ComponentItem(allocator: zx.Allocator, props: ComponentItemProps) zx.Component {
-    const sel = selected_component.get();
+    const sel = selected_component;
     const dom_id = std.fmt.allocPrint(allocator, "comp-{s}", .{props.id}) catch "";
     const padding = props.depth * 24 + 16;
     const style_str = std.fmt.allocPrint(allocator, "padding-left: {d}px", .{padding}) catch "";
