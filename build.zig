@@ -44,6 +44,7 @@ pub fn build(b: *std.Build) !void {
     // Add stub meta for standalone builds (overridden in user projects with generated meta)
     // stub_meta.zig imports stub_components.zig directly from the same directory
     mod.addAnonymousImport("zx_meta", .{ .root_source_file = b.path("src/build/stub_meta.zig"), .imports = &.{.{ .name = "zx", .module = mod }} });
+    mod.addAnonymousImport("zx_injections", .{ .root_source_file = b.path("src/build/stubs/injections.zig") });
 
     // --- ZX WASM Module --- //
     const zx_wasm_mod = b.addModule("zx_wasm", .{ .root_source_file = b.path("src/root.zig"), .target = target, .optimize = optimize });
@@ -55,6 +56,7 @@ pub fn build(b: *std.Build) !void {
     zx_wasm_mod.addOptions("zx_info", options);
     // Add stub meta for WASM builds (overridden in user projects with generated meta)
     zx_wasm_mod.addAnonymousImport("zx_meta", .{ .root_source_file = b.path("src/build/stub_meta.zig"), .imports = &.{.{ .name = "zx", .module = zx_wasm_mod }} });
+    zx_wasm_mod.addAnonymousImport("zx_injections", .{ .root_source_file = b.path("src/build/stubs/injections.zig") });
 
     // --- ZX CLI (Transpiler, Exporter, Dev Server) --- //
     const zli_dep = b.dependency("zli", .{ .target = target, .optimize = optimize });
